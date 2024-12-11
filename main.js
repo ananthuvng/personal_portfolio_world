@@ -1064,28 +1064,6 @@ class ThirdPersonCameraDemo {
       })
     );
 
-// Set plane rotation to be flat on the ground (if needed)
-plane.rotation.x = -Math.PI / 2;
-
-// Create bounding box
-const boundingBox = new THREE.Box3().setFromObject(plane);
-
-// Expand the bounding box by 2 units in each direction
-boundingBox.expandByScalar(2);
-
-// Now you can get the min and max corners of the expanded box
-const minCorner = boundingBox.min;
-const maxCorner = boundingBox.max;
-
-// If you want to get the specific coordinates
-const edgePositions = {
-    bottomLeft: new THREE.Vector3(minCorner.x, minCorner.y, minCorner.z),
-    topRight: new THREE.Vector3(maxCorner.x, maxCorner.y, maxCorner.z)
-};
-
-// Optional: Visualize the bounding box
-const boxHelper = new THREE.Box3Helper(boundingBox, 0xffff00);
-this._params.scene.add(boxHelper);
     // Add the plane to the scene
     plane.castShadow = false;
     plane.receiveShadow = true;
