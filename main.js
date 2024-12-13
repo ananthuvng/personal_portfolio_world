@@ -248,12 +248,12 @@ class BasicCharacterController {
 
         this._animations[animName] = {
           clip: clip,
-          action: action,
+          action: action, 
         };
       };
 
       const loader = new FBXLoader(this._manager);
-      loader.setPath("./resources/zombie/");
+      loader.setPath("./resources/models/");
       loader.load("walking.fbx", (a) => {
         _OnLoad("walk", a);
       });
