@@ -2,7 +2,11 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.118/build/three.mod
 
 import { FBXLoader } from "https://cdn.jsdelivr.net/npm/three@0.118.1/examples/jsm/loaders/FBXLoader.js";
 import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.118.1/examples/jsm/loaders/GLTFLoader.js";
-import { _hideLoadingScreen, _showLoadingScreen, _updateLoadingProgress } from "./loading.js";
+import {
+  _hideLoadingScreen,
+  _showLoadingScreen,
+  _updateLoadingProgress,
+} from "./loading.js";
 
 class BasicCharacterControllerProxy {
   constructor(animations) {
@@ -66,23 +70,24 @@ class BasicCharacterController {
     );
 
     const loader = new FBXLoader(this._manager); // Use the manager here
-    loader.setPath("./resources/zombie/");
-    loader.load("vendingold.fbx", (fbx) => {
-      fbx.traverse((c) => {
-        c.castShadow = true;
-      });
-      fbx.scale.setScalar(0.1);
-      fbx.position.set(0, 0, 0);
-      this._params.scene.add(fbx);
+    loader.setPath("./resources/models/");
+    // loader.load("vendingold.fbx", (fbx) => {
+    //   fbx.traverse((c) => {
+    //     c.castShadow = true;
+    //   });
+    //   fbx.scale.setScalar(0.1);
+    //   fbx.position.set(0, 0, 0);
+    //   this._params.scene.add(fbx);
 
-      this._vendingMachine = fbx;
-    });
+    //   this._vendingMachine = fbx;
+    // });
     loader.load("officefuture.fbx", (fbx) => {
       fbx.traverse((c) => {
         c.castShadow = true;
       });
       fbx.scale.setScalar(0.5);
-      fbx.position.set(0, 0, 0);
+      fbx.rotation.y = Math.PI / 2;
+      fbx.position.set(300, 0, 0);
       this._params.scene.add(fbx);
 
       this._office = fbx;
@@ -93,103 +98,139 @@ class BasicCharacterController {
       });
       // fbx.rotation.y = - Math.PI/2 ;
       fbx.scale.setScalar(3);
-      fbx.position.set(-120, 0, 90);
+      fbx.position.set(-75, 0, 15);
       this._params.scene.add(fbx);
 
       this._office = fbx;
     });
-    loader.load("new.fbx", (fbx) => {
-      fbx.traverse((c) => {
-        if (c.isMesh) {
-          c.castShadow = true;
+    // loader.load("new.fbx", (fbx) => {
+    //   fbx.traverse((c) => {
+    //     if (c.isMesh) {
+    //       c.castShadow = true;
+        
+    //       // Set transparency
+    //       if (c.material) {
+    //         c.material.transparent = true;
+    //         c.material.opacity = 20; // Adjust this value for desired transparency
+    //       }
+    //     }
+    //   });
+    //   fbx.rotation.y = Math.PI;
+    //   fbx.scale.setScalar(0.1);
+    //   fbx.position.set(-65, 2, 70);
+    //   this._params.scene.add(fbx);
 
-          // Set transparency
-          if (c.material) {
-            c.material.transparent = true;
-            c.material.opacity = 20; // Adjust this value for desired transparency
-          }
-        }
-      });
-      fbx.rotation.y = Math.PI  ;
-      fbx.scale.setScalar(0.1);
-      fbx.position.set(-115, 2, 135);
-      this._params.scene.add(fbx);
-
-      this._gas = fbx;
-    });
-    loader.load("spacecar.fbx", (fbx) => {
+    //   this._gas = fbx;
+    // });
+    loader.load("spacecablecar.fbx", (fbx) => {
       fbx.traverse((c) => {
         c.castShadow = true;
       });
 
-      fbx.scale.setScalar(25);
-      fbx.position.set(-120, 15, 30);
+      fbx.scale.setScalar(.2);
+      fbx.rotation.y = -Math.PI/2;
+
+      fbx.position.set(-300, -5, -200);
       this._params.scene.add(fbx);
 
       this._carfly = fbx;
     });
-    loader.load("building.fbx", (fbx) => {
+    loader.load("lounge8.fbx", (fbx) => {
       fbx.traverse((c) => {
         c.castShadow = true;
       });
-      fbx.scale.setScalar(0.1);
-      fbx.position.set(100, 0, 0);
+      fbx.scale.setScalar(0.4);
+      fbx.position.set(-57, -2, 0);
+      fbx.rotation.y = -Math.PI/2;
       this._params.scene.add(fbx);
 
       this._building = fbx;
     });
-    loader.load("fence.fbx", (fbx) => {
+    loader.load("scififence.fbx", (fbx) => {
       // Prepare the base fence configuration
       fbx.traverse((c) => {
         c.castShadow = true;
         if (c.material) {
           c.material.transparent = true;
-          c.material.opacity = 1;
+          c.material.opacity = 10;
         }
       });
-    
+
       // Create an array to store all fence instances
       this._fences = [fbx];
-    
+
       // Predefined positions for the fences
       const positions = [
-        { x: 148, z: 70 },
-        { x: 148, z: 115 },
-        { x: 148, z: 160 },
-        { x: 148, z: 205 },
-        { x: 148, z: 250 },
-        { x: 148, z: 295 },
-        { x: 148, z: 340 },
-        { x: 148, z: 385 }
+        { x: 105, z: -60, a: -Math.PI/2  },
+        { x: 105, z: -25, a: -Math.PI/2  },
+        { x: 105, z: 42.5, a: -Math.PI/2  },
+        { x: 105, z: 77.5, a: -Math.PI/2  },
+
+        { x: -105, z: -60, a: -Math.PI/2  },
+        { x: -105, z: -25, a: -Math.PI/2  },
+        { x: -105, z: 10, a: -Math.PI/2  },
+        { x: -105, z: 42.5, a: -Math.PI/2  },
+        { x: -105, z: 77.5, a: -Math.PI/2  },
+
+        { z: -86, x: -78, a: Math.PI },
+        { z: -86, x: -43, a: Math.PI },
+        { z: -86, x: -8, a: Math.PI },
+        { z: -86, x: 27, a: Math.PI },
+        { z: -86, x: 62, a: Math.PI },
+        { z: -86, x: 96.5, a: Math.PI },
+
+        { z: 86, x: -78, a: Math.PI },
+        { z: 86, x: -43, a: Math.PI },
+        { z: 86, x: -8, a: Math.PI },
+        { z: 86, x: 27, a: Math.PI },
+        { z: 86, x: 62, a: Math.PI },
+        { z: 86, x: 96.5, a: Math.PI },
+
+
+        { z: 16.5, x: 131.5, a: Math.PI },
+        { z:16.5, x: 166.5, a: Math.PI },
+        { z:16.5, x: 201.5, a: Math.PI },
+        { z:16.5, x: 236.5, a: Math.PI },
+
+        { z:-16.5, x: 131.5, a: Math.PI },
+        { z:-16.5, x: 166.5, a: Math.PI },
+        { z:-16.5, x: 201.5, a: Math.PI },
+        { z:-16.5, x: 236.5, a: Math.PI },
+
+        { x: 245, z: 42.5, a: -Math.PI/2  },
+        { x: 245, z: -26, a: -Math.PI/2  },
+
+        { x: 314.5, z: 42.5, a: -Math.PI/2  },
+        { x: 314.5, z: 8.5, a: -Math.PI/2  },
+        { x: 314.5, z: -26, a: -Math.PI/2  },
+
+        { z:-52, x:271, a: Math.PI },
+        { z:-52, x: 306, a: Math.PI },
+        { z:51, x:271, a: Math.PI },
+        { z:51, x: 306, a: Math.PI },
       ];
-    
+
       // Create clones and position them
-      positions.slice(1).forEach((pos) => {
+      positions.forEach((pos) => {
         const fenceClone = fbx.clone();
-        
-        fenceClone.scale.setScalar(0.08);
+
+        fenceClone.scale.setScalar(10);
         fenceClone.position.set(pos.x, 0, pos.z);
-        fenceClone.rotation.y = -Math.PI / 2;
-        
+        fenceClone.rotation.y = pos.a;
+
         this._params.scene.add(fenceClone);
         this._fences.push(fenceClone);
       });
-    
-      // Position and add the original fence
-      fbx.scale.setScalar(0.08);
-      fbx.position.set(148, 0, 70);
-      fbx.rotation.y = -Math.PI / 2;
-      this._params.scene.add(fbx);
     });
-    
+
     loader.load("ananthu.fbx", (fbx) => {
       fbx.scale.setScalar(0.1);
       fbx.traverse((c) => {
         c.castShadow = true;
       });
-      fbx.position.set(-130, 0, 105);
+      fbx.position.set(-90, 0, 5);
       //how can i stop the moving ananthu.fbx model when it touchers the VendingMachineFinal01 as normal objects
-      fbx.rotation.y =  Math.PI /2 ;
+      fbx.rotation.y = Math.PI / 2;
 
       this._target = fbx;
       this._params.scene.add(this._target);
@@ -263,10 +304,10 @@ class BasicCharacterController {
       const clickedObject = intersects[0].object;
 
       // Check if the clicked object is the vending machine
-      if (clickedObject.parent === this._vendingMachine) {
-        // window.open('vending.html', '_blank');
-        this._showPopup();
-      }
+      // if (clickedObject.parent === this._vendingMachine) {
+      //   // window.open('vending.html', '_blank');
+      //   this._showPopup();
+      // }
     }
   }
 
@@ -368,9 +409,9 @@ class BasicCharacterController {
 
     velocity.add(frameDecceleration);
 
-    const vendingMachineBBox = new THREE.Box3().setFromObject(
-      this._vendingMachine
-    );
+    // const vendingMachineBBox = new THREE.Box3().setFromObject(
+    //   this._vendingMachine
+    // );
     // const fencesBBox = new THREE.Box3().setFromObject(
     //   this._fences
     // );
@@ -383,7 +424,7 @@ class BasicCharacterController {
     const max = new THREE.Vector3(width / 2, 0, length / 2); // Top-right corner
 
     // Create the Box3
-    const officeBBox = new THREE.Box3(min, max);
+    // const officeBBox = new THREE.Box3(min, max);
 
     this._stateMachine.Update(timeInSeconds, this._input);
 
@@ -401,16 +442,19 @@ class BasicCharacterController {
       acc.multiplyScalar(0.0);
     }
 
-    if (officeBBox.intersectsBox(characterBBox)) {
-      if (!this._input._keys.backward) {
-        velocity.x = 0;
-        velocity.y = 0;
-        velocity.z = 0;
-        // this._stateMachine.SetState("idle");
-      } else {
-        velocity.z -= acc.z * timeInSeconds;
-      }
-    } else if (vendingMachineBBox.intersectsBox(characterBBox)) {
+    // if (officeBBox.intersectsBox(characterBBox)) {
+    //   if (!this._input._keys.backward) {
+    //     velocity.x = 0;
+    //     velocity.y = 0;
+    //     velocity.z = 0;
+    //     // this._stateMachine.SetState("idle");
+    //   } else {
+    //     velocity.z -= acc.z * timeInSeconds;
+    //   }
+    // } else
+     if (false
+      // vendingMachineBBox.intersectsBox(characterBBox)
+    ) {
       if (!this._input._keys.backward) {
         velocity.x = 0;
         velocity.y = 0;
@@ -1006,7 +1050,7 @@ class ThirdPersonCameraDemo {
 
     this._scene = new THREE.Scene();
 
-    let light = new THREE.DirectionalLight(0xffffff, 0.3);
+    let light = new THREE.DirectionalLight(0xfdfbd3, .3);
     // Set light position and target
     light.position.set(-200, 200, 200); // Position the light at the desired location
     light.target.position.set(0, 0, 0); // Targeting the center (0, 0, 0)
@@ -1048,27 +1092,72 @@ class ThirdPersonCameraDemo {
     texture.encoding = THREE.sRGBEncoding; // Ensure correct color encoding
     this._scene.background = texture;
     const textureLoader = new THREE.TextureLoader();
-
-    const textureGround = textureLoader.load("./resources/ground.jpg");
+    const textureGround = textureLoader.load("./resources/AA.jpg");
 
     // Configure the texture for repeating
-    textureGround.wrapS = THREE.RepeatWrapping; // Repeat horizontally
-    textureGround.wrapT = THREE.RepeatWrapping; // Repeat vertically
-    textureGround.repeat.set(10, 10); // Set repetition count
+    textureGround.wrapS = THREE.RepeatWrapping;
+    textureGround.wrapT = THREE.RepeatWrapping;
+    textureGround.repeat.set(10, 10);
 
-    // Create the plane with the textured material
-    const plane = new THREE.Mesh(
-      new THREE.PlaneGeometry(300, 300, 10, 10),
+    // First (main) plane
+    const mainPlane = new THREE.Mesh(
+      new THREE.BoxGeometry(212, 10, 175), // width, height, depth
       new THREE.MeshStandardMaterial({
-        map: textureGround, // Apply the texture
+        map: textureGround,
       })
     );
 
-    // Add the plane to the scene
-    plane.castShadow = false;
-    plane.receiveShadow = true;
-    plane.rotation.x = -Math.PI / 2;
-    this._scene.add(plane);
+    // Second (smaller) plane
+    const secondaryPlane = new THREE.Mesh(
+      new THREE.BoxGeometry(72, 10, 105), // width, height, depth
+      new THREE.MeshStandardMaterial({
+        map: textureGround,
+        color: 0xcccccc,
+      })
+    );
+
+    const thirdPlane = new THREE.Mesh(
+      new THREE.BoxGeometry(35, 10, 158), // width, height, depth
+      new THREE.MeshStandardMaterial({
+        map: textureGround,
+        color: 0xcccccc,
+      })
+    );
+
+    // Set common properties
+    mainPlane.castShadow = false;
+    mainPlane.receiveShadow = true;
+
+    secondaryPlane.castShadow = false;
+    secondaryPlane.receiveShadow = true;
+
+    thirdPlane.rotation.y = Math.PI/2;
+    thirdPlane.castShadow = false;
+    thirdPlane.receiveShadow = true;
+    mainPlane.position.set(
+      0, // x
+      -5, // y (centered on the ground)
+      0 // z
+    );
+    // Position the planes
+    secondaryPlane.position.set(
+      280, // x
+      -5, // y (centered on the ground)
+      0 // z
+    );
+
+    thirdPlane.position.set(
+      185, // x
+      -5, // y (centered on the ground)
+      0 // z
+    );
+
+
+    // Add planes to the scene
+    this._scene.add(mainPlane);
+    this._scene.add(secondaryPlane);
+    this._scene.add(thirdPlane);
+    // this._scene.add(plane);
     this._mixers = [];
     this._previousRAF = null;
 
