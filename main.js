@@ -7,6 +7,9 @@ import {
   _showLoadingScreen,
   _updateLoadingProgress,
 } from "./loading.js";
+import { showAbout } from "./about.js";
+import { startSpaceShooterGame } from "./game.js";
+import { startStreetFighterGame } from "./game2.js";
 
 class BasicCharacterControllerProxy {
   constructor(animations) {
@@ -33,18 +36,67 @@ class BasicCharacterController {
     this._acceleration = new THREE.Vector3(1, 0.25, 100.0);
     this._velocity = new THREE.Vector3(0, 0, 0);
     this._position = new THREE.Vector3();
-
+    this._setupAudio();
     this._animations = {};
     this._input = new BasicCharacterControllerInput();
     this._stateMachine = new CharacterFSM(
       new BasicCharacterControllerProxy(this._animations)
     );
-
+    this._onaAnotherWindow = false;
     this._LoadModels();
 
     this._AddMouseClickListener();
   }
 
+  _setupAudio() {
+    // Create an audio listener
+    this._audioListener = new THREE.AudioListener();
+    this._params.camera.add(this._audioListener);
+
+    // Create audio source for walking
+    this._walkingSound = new THREE.Audio(this._audioListener);
+
+    // Load walking sound
+    const audioLoader = new THREE.AudioLoader();
+    audioLoader.load("./resources/walking.mp3", (buffer) => {
+      this._walkingSound.setBuffer(buffer);
+      this._walkingSound.setLoop(true);
+      this._walkingSound.setVolume(0.5);
+    });
+  }
+  _updateSound(state) {
+    if (
+      !this._walkingSound.isPlaying &&
+      (state === "walk" || state === "run" || state === "walkback")
+    ) {
+      this._walkingSound.play();
+      // Set playback rate based on state
+      this._walkingSound.setPlaybackRate(state === "run" ? 1.8 : 1.0);
+    } else if (
+      this._walkingSound.isPlaying &&
+      state !== "walk" &&
+      state !== "run" &&
+      state !== "walkback"
+    ) {
+      this._walkingSound.stop();
+    } else if (this._walkingSound.isPlaying) {
+      // Update playback rate if already playing
+      this._walkingSound.setPlaybackRate(state === "run" ? 1.8 : 1.0);
+    }
+  }
+
+  _findChildByName = (parent, targetName) => {
+    if (parent.name === targetName) {
+      return parent;
+    } else {
+      for (let child of parent.children) {
+        const foundInNestedChildren = this._findChildByName(child, targetName);
+        if (foundInNestedChildren) {
+          return foundInNestedChildren;
+        }
+      }
+    }
+  };
   _LoadModels() {
     // Set up the LoadingManager
     _showLoadingScreen();
@@ -71,80 +123,126 @@ class BasicCharacterController {
 
     const loader = new FBXLoader(this._manager); // Use the manager here
     loader.setPath("./resources/models/");
-    // loader.load("vendingold.fbx", (fbx) => {
-    //   fbx.traverse((c) => {
-    //     c.castShadow = true;
-    //   });
-    //   fbx.scale.setScalar(0.1);
-    //   fbx.position.set(0, 0, 0);
-    //   this._params.scene.add(fbx);
+    loader.load("screennew.fbx", (fbx) => {
+      fbx.traverse((c) => {
+        // c.castShadow = true;
+        if (c.material) {
+          c.material.transparent = true;
+          c.material.opacity = 3; // Adjust this value for desired transparency
+        }
+      });
+      fbx.rotation.y = -Math.PI / 2;
+      fbx.scale.setScalar(60);
+      fbx.position.set(0, 18, -13);
 
-    //   this._vendingMachine = fbx;
-    // });
-    loader.load("officefuture.fbx", (fbx) => {
+      this._params.scene.add(fbx);
+
+      this._about = fbx;
+    });
+
+    loader.load("project1.fbx", (fbx) => {
+      fbx.traverse((c) => {
+        if (c.material) {
+          c.material.transparent = true;
+          c.material.opacity = 3;
+        }
+      });
+      fbx.rotation.y = -Math.PI / 2;
+      fbx.scale.setScalar(40);
+      fbx.position.set(98, 15, -58);
+      this._params.scene.add(fbx);
+      this._project = fbx;
+    });
+    loader.load("blog.fbx", (fbx) => {
+      fbx.traverse((c) => {
+        if (c.material) {
+          c.material.transparent = true;
+          c.material.opacity = 3;
+        }
+      });
+      fbx.rotation.y = -Math.PI / 2;
+      fbx.scale.setScalar(40);
+      fbx.position.set(98, 15, 43);
+      this._params.scene.add(fbx);
+      this._project = fbx;
+    });
+
+    loader.load("dronefinal.fbx", (fbx) => {
+      fbx.traverse((c) => {
+        if (c.material) {
+          c.material.transparent = true;
+          c.material.opacity = 3;
+        }
+      });
+      fbx.rotation.y = Math.PI / 2;
+      fbx.scale.setScalar(0.4);
+      fbx.position.set(110, 10, 0);
+
+      this._params.scene.add(fbx);
+    });
+
+    loader.load("projector.fbx", (fbx) => {
       fbx.traverse((c) => {
         c.castShadow = true;
       });
-      fbx.scale.setScalar(0.5);
-      fbx.rotation.y = Math.PI / 2;
-      fbx.position.set(300, 0, 0);
-      this._params.scene.add(fbx);
+      fbx.scale.setScalar(12);
+      fbx.position.set(0, 18, 0);
+      const prjrctor1 = fbx.clone();
+      const prjrctor2 = fbx.clone();
+      prjrctor2.position.set(98, 18, -50);
+      prjrctor1.position.set(98, 18, 50);
 
-      this._office = fbx;
+      this._params.scene.add(prjrctor1);
+      this._params.scene.add(prjrctor2);
+
+      this._params.scene.add(fbx);
     });
+
     loader.load("screen2.fbx", (fbx) => {
       fbx.traverse((c) => {
         c.castShadow = true;
       });
       // fbx.rotation.y = - Math.PI/2 ;
       fbx.scale.setScalar(3);
-      fbx.position.set(-75, 0, 15);
+      fbx.position.set(-75, 0, -5);
       this._params.scene.add(fbx);
-
-      this._office = fbx;
     });
-    // loader.load("new.fbx", (fbx) => {
-    //   fbx.traverse((c) => {
-    //     if (c.isMesh) {
-    //       c.castShadow = true;
-        
-    //       // Set transparency
-    //       if (c.material) {
-    //         c.material.transparent = true;
-    //         c.material.opacity = 20; // Adjust this value for desired transparency
-    //       }
-    //     }
-    //   });
-    //   fbx.rotation.y = Math.PI;
-    //   fbx.scale.setScalar(0.1);
-    //   fbx.position.set(-65, 2, 70);
-    //   this._params.scene.add(fbx);
-
-    //   this._gas = fbx;
-    // });
     loader.load("spacecablecar.fbx", (fbx) => {
       fbx.traverse((c) => {
         c.castShadow = true;
       });
 
-      fbx.scale.setScalar(.2);
-      fbx.rotation.y = -Math.PI/2;
+      fbx.scale.setScalar(0.5);
+      fbx.rotation.y = -Math.PI / 2;
 
-      fbx.position.set(-300, -5, -200);
+      fbx.position.set(-600, 30, -200);
       this._params.scene.add(fbx);
 
       this._carfly = fbx;
     });
-    loader.load("lounge8.fbx", (fbx) => {
+    loader.load("lounge.fbx", (fbx) => {
       fbx.traverse((c) => {
         c.castShadow = true;
       });
-      fbx.scale.setScalar(0.4);
-      fbx.position.set(-57, -2, 0);
-      fbx.rotation.y = -Math.PI/2;
-      this._params.scene.add(fbx);
+      this._gaming = this._findChildByName(
+        fbx,
+        "Bar_completo2ARCADE_Bar_completo2Mat_Arcade_SI_0"
+      );
 
-      this._building = fbx;
+      fbx.scale.setScalar(0.4);
+      fbx.position.set(-55, -2, 3);
+      fbx.rotation.y = -Math.PI / 2;
+      this._params.scene.add(fbx);
+    });
+    loader.load("entrance.fbx", (fbx) => {
+      fbx.traverse((c) => {
+        c.castShadow = true;
+      });
+
+      fbx.scale.setScalar(0.048);
+      fbx.position.set(-17, 0, -155);
+      // fbx.rotation.y = -Math.PI / 2;
+      this._params.scene.add(fbx);
     });
     loader.load("scififence.fbx", (fbx) => {
       // Prepare the base fence configuration
@@ -161,20 +259,20 @@ class BasicCharacterController {
 
       // Predefined positions for the fences
       const positions = [
-        { x: 105, z: -60, a: -Math.PI/2  },
-        { x: 105, z: -25, a: -Math.PI/2  },
-        { x: 105, z: 42.5, a: -Math.PI/2  },
-        { x: 105, z: 77.5, a: -Math.PI/2  },
+        { x: 105, z: -60, a: -Math.PI / 2 },
+        { x: 105, z: -25, a: -Math.PI / 2 },
+        { x: 105, z: 42.5, a: -Math.PI / 2 },
+        { x: 105, z: 77.5, a: -Math.PI / 2 },
 
-        { x: -105, z: -60, a: -Math.PI/2  },
-        { x: -105, z: -25, a: -Math.PI/2  },
-        { x: -105, z: 10, a: -Math.PI/2  },
-        { x: -105, z: 42.5, a: -Math.PI/2  },
-        { x: -105, z: 77.5, a: -Math.PI/2  },
+        { x: -105, z: -60, a: -Math.PI / 2 },
+        { x: -105, z: -25, a: -Math.PI / 2 },
+        { x: -105, z: 10, a: -Math.PI / 2 },
+        { x: -105, z: 42.5, a: -Math.PI / 2 },
+        { x: -105, z: 77.5, a: -Math.PI / 2 },
 
         { z: -86, x: -78, a: Math.PI },
         { z: -86, x: -43, a: Math.PI },
-        { z: -86, x: -8, a: Math.PI },
+
         { z: -86, x: 27, a: Math.PI },
         { z: -86, x: 62, a: Math.PI },
         { z: -86, x: 96.5, a: Math.PI },
@@ -186,28 +284,33 @@ class BasicCharacterController {
         { z: 86, x: 62, a: Math.PI },
         { z: 86, x: 96.5, a: Math.PI },
 
-
         { z: 16.5, x: 131.5, a: Math.PI },
-        { z:16.5, x: 166.5, a: Math.PI },
-        { z:16.5, x: 201.5, a: Math.PI },
-        { z:16.5, x: 236.5, a: Math.PI },
+        { z: 16.5, x: 166.5, a: Math.PI },
+        { z: 16.5, x: 201.5, a: Math.PI },
+        { z: 16.5, x: 236.5, a: Math.PI },
 
-        { z:-16.5, x: 131.5, a: Math.PI },
-        { z:-16.5, x: 166.5, a: Math.PI },
-        { z:-16.5, x: 201.5, a: Math.PI },
-        { z:-16.5, x: 236.5, a: Math.PI },
+        { z: -16.5, x: 131.5, a: Math.PI },
+        { z: -16.5, x: 166.5, a: Math.PI },
+        { z: -16.5, x: 201.5, a: Math.PI },
+        { z: -16.5, x: 236.5, a: Math.PI },
 
-        { x: 245, z: 42.5, a: -Math.PI/2  },
-        { x: 245, z: -26, a: -Math.PI/2  },
+        { x: 245, z: 42.5, a: -Math.PI / 2 },
+        { x: 245, z: -26, a: -Math.PI / 2 },
 
-        { x: 314.5, z: 42.5, a: -Math.PI/2  },
-        { x: 314.5, z: 8.5, a: -Math.PI/2  },
-        { x: 314.5, z: -26, a: -Math.PI/2  },
+        { x: 314.5, z: 42.5, a: -Math.PI / 2 },
+        { x: 314.5, z: 8.5, a: -Math.PI / 2 },
+        { x: 314.5, z: -26, a: -Math.PI / 2 },
 
-        { z:-52, x:271, a: Math.PI },
-        { z:-52, x: 306, a: Math.PI },
-        { z:51, x:271, a: Math.PI },
-        { z:51, x: 306, a: Math.PI },
+        { z: -52, x: 271, a: Math.PI },
+        { z: -52, x: 306, a: Math.PI },
+        { z: 51, x: 271, a: Math.PI },
+        { z: 51, x: 306, a: Math.PI },
+
+        { z: -112, x: 1, a: Math.PI / 2 },
+        { z: -147, x: 1, a: Math.PI / 2 },
+
+        { z: -112, x: -34.5, a: Math.PI / 2 },
+        { z: -147, x: -34.5, a: Math.PI / 2 },
       ];
 
       // Create clones and position them
@@ -248,7 +351,7 @@ class BasicCharacterController {
 
         this._animations[animName] = {
           clip: clip,
-          action: action, 
+          action: action,
         };
       };
 
@@ -286,8 +389,20 @@ class BasicCharacterController {
     );
   }
 
+  _isDescendantOf(intersectedObject, targetObject) {
+    let currentObj = intersectedObject;
+    while (currentObj) {
+      if (currentObj === targetObject) {
+        return true;
+      }
+      currentObj = currentObj.parent;
+    }
+    return false;
+  }
+
+  // Usage in click and hover methods
   _OnMouseClick(event) {
-    // Normalize mouse position
+    // ... existing raycaster setup code ...
     this._mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     this._mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
@@ -301,84 +416,24 @@ class BasicCharacterController {
     );
 
     if (intersects.length > 0) {
-      const clickedObject = intersects[0].object;
+      const isAboutClicked = intersects.some((intersect) =>
+        this._isDescendantOf(intersect.object, this._about)
+      );
 
-      // Check if the clicked object is the vending machine
-      // if (clickedObject.parent === this._vendingMachine) {
-      //   // window.open('vending.html', '_blank');
-      //   this._showPopup();
-      // }
+      const isGamingClicked = intersects.some(
+        (intersect) => intersect.object === this._gaming
+      );
+
+      if (isGamingClicked) {
+        this._onaAnotherWindow = true;
+        startSpaceShooterGame(this);
+      }
+
+      if (isAboutClicked) {
+        this._onaAnotherWindow = true;
+        showAbout(this);
+      }
     }
-  }
-
-  _showPopup() {
-    // Example cola names
-    const colaNames = ["Coca-Cola", "Pepsi", "Sprite", "Fanta", "Mountain Dew"];
-
-    // Create the popup container
-    const popup = document.createElement("div");
-    popup.id = "cola-popup";
-    popup.style.position = "fixed";
-    popup.style.top = "50%";
-    popup.style.left = "50%";
-    popup.style.transform = "translate(-50%, -50%)";
-    popup.style.width = "300px";
-    popup.style.maxHeight = "400px";
-    popup.style.overflowY = "scroll";
-    popup.style.backgroundColor = "white";
-    popup.style.border = "2px solid black";
-    popup.style.borderRadius = "10px";
-    popup.style.padding = "10px";
-    popup.style.zIndex = "1000";
-    popup.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.2)";
-
-    // Add title
-    const title = document.createElement("h3");
-    title.innerText = "Available Colas";
-    title.style.textAlign = "center";
-    popup.appendChild(title);
-
-    // Add cola names
-    colaNames.forEach((name) => {
-      const item = document.createElement("div");
-      item.innerText = name;
-      item.style.padding = "5px";
-      item.style.cursor = "pointer";
-      item.style.borderBottom = "1px solid #ddd";
-
-      // Add hover effect
-      item.addEventListener("mouseover", () => {
-        item.style.backgroundColor = "#f0f0f0";
-      });
-      item.addEventListener("mouseout", () => {
-        item.style.backgroundColor = "white";
-      });
-
-      // Handle cola click
-      item.addEventListener("click", () => {
-        alert(`You selected: ${name}`);
-        document.body.removeChild(popup); // Close the popup
-      });
-
-      popup.appendChild(item);
-    });
-
-    // Add close button
-    const closeButton = document.createElement("button");
-    closeButton.innerText = "Close";
-    closeButton.style.display = "block";
-    closeButton.style.margin = "10px auto 0";
-    closeButton.style.padding = "5px 10px";
-    closeButton.style.cursor = "pointer";
-
-    closeButton.addEventListener("click", () => {
-      document.body.removeChild(popup); // Remove the popup
-    });
-
-    popup.appendChild(closeButton);
-
-    // Add the popup to the document
-    document.body.appendChild(popup);
   }
 
   get Position() {
@@ -393,7 +448,10 @@ class BasicCharacterController {
   }
 
   Update(timeInSeconds) {
-    if (!this._stateMachine._currentState) {
+    if (!this._stateMachine._currentState || this._onaAnotherWindow) {
+      if (this._walkingSound && this._walkingSound.isPlaying) {
+        this._walkingSound.stop();
+      }
       return;
     }
     const velocity = this._velocity;
@@ -441,7 +499,9 @@ class BasicCharacterController {
     if (this._stateMachine._currentState.Name == "dance") {
       acc.multiplyScalar(0.0);
     }
-
+    if (this._walkingSound && this._stateMachine._currentState) {
+      this._updateSound(this._stateMachine._currentState.Name);
+    }
     // if (officeBBox.intersectsBox(characterBBox)) {
     //   if (!this._input._keys.backward) {
     //     velocity.x = 0;
@@ -452,7 +512,8 @@ class BasicCharacterController {
     //     velocity.z -= acc.z * timeInSeconds;
     //   }
     // } else
-     if (false
+    if (
+      false
       // vendingMachineBBox.intersectsBox(characterBBox)
     ) {
       if (!this._input._keys.backward) {
@@ -1050,7 +1111,7 @@ class ThirdPersonCameraDemo {
 
     this._scene = new THREE.Scene();
 
-    let light = new THREE.DirectionalLight(0xfdfbd3, .3);
+    let light = new THREE.DirectionalLight(0xfdfbd3, 0.3);
     // Set light position and target
     light.position.set(-200, 200, 200); // Position the light at the desired location
     light.target.position.set(0, 0, 0); // Targeting the center (0, 0, 0)
@@ -1123,6 +1184,13 @@ class ThirdPersonCameraDemo {
         color: 0xcccccc,
       })
     );
+    const fourthPlane = new THREE.Mesh(
+      new THREE.BoxGeometry(80, 10, 44), // width, height, depth
+      new THREE.MeshStandardMaterial({
+        map: textureGround,
+        color: 0xcccccc,
+      })
+    );
 
     // Set common properties
     mainPlane.castShadow = false;
@@ -1131,9 +1199,13 @@ class ThirdPersonCameraDemo {
     secondaryPlane.castShadow = false;
     secondaryPlane.receiveShadow = true;
 
-    thirdPlane.rotation.y = Math.PI/2;
+    thirdPlane.rotation.y = Math.PI / 2;
     thirdPlane.castShadow = false;
     thirdPlane.receiveShadow = true;
+    fourthPlane.rotation.y = Math.PI / 2;
+
+    fourthPlane.castShadow = false;
+    fourthPlane.receiveShadow = true;
     mainPlane.position.set(
       0, // x
       -5, // y (centered on the ground)
@@ -1152,11 +1224,17 @@ class ThirdPersonCameraDemo {
       0 // z
     );
 
+    fourthPlane.position.set(
+      -17, // x
+      -5, // y (centered on the ground)
+      -127 // z
+    );
 
     // Add planes to the scene
     this._scene.add(mainPlane);
     this._scene.add(secondaryPlane);
     this._scene.add(thirdPlane);
+    this._scene.add(fourthPlane);
     // this._scene.add(plane);
     this._mixers = [];
     this._previousRAF = null;
